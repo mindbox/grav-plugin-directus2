@@ -1,0 +1,15 @@
+enabled: true
+
+disableCors: true
+endpointName: your-prefix
+blueprints: user/blueprints/flex-objects/directus
+storage: user/data/directus
+
+logging: false
+lockfileLifetime: 120
+
+directus:
+  token: 1234567
+  email: your@email.com
+  password: supersavepassword
+  directusAPIUrl: http://your.api.com

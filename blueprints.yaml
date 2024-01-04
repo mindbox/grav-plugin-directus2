@@ -1,0 +1,33 @@
+name: Directus2
+slug: directus2
+type: plugin
+version: 0.0.1
+description: Using grav as frontend for a directus headless CMS
+icon: plug
+author:
+  name: Sebastian Laube
+  email: sebastian.laube@mindbox.de
+homepage: https://github.com/mindbox/grav-plugin-directus2
+demo: http://demo.yoursite.com
+keywords: grav, plugin, etc
+bugs: https://github.com/mindbox/grav-plugin-directus2/issues
+docs: https://github.com/mindbox/grav-plugin-directus2/blob/develop/README.md
+license: MIT
+
+dependencies:
+  - { name: grav, version: '>=1.6.0' }
+  - { name: flex-objects }
+
+form:
+  validation: loose
+  fields:
+    enabled:
+      type: toggle
+      label: PLUGIN_ADMIN.PLUGIN_STATUS
+      highlight: 1
+      default: 0
+      options:
+        1: PLUGIN_ADMIN.ENABLED
+        0: PLUGIN_ADMIN.DISABLED
+      validate:
+        type: bool

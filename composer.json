@@ -1,0 +1,24 @@
+{
+  "name": "sebastian-laube/directus2",
+  "type": "grav-plugin",
+  "description": "Using grav as frontend for a directus headless CMS",
+  "keywords": ["plugin"],
+  "homepage": "https://github.com/sebastian-laube/grav-plugin-directus2",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Sebastian Laube",
+      "email": "sebastian.laube@mindbox.de",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": ">=7.1.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "Grav\\Plugin\\Directus2\\": "classes/"
+    },
+    "classmap":  ["directus2.php"]
+  }
+}
