@@ -10,39 +10,39 @@ With this plugin we import information from directus collections into flex-objec
 
 ### Our Scenario
 
-Wir nutzen bei mehreren Projekten grav als Frontend für ein directus headless CMS. Dabei gib eine Collection in denen die Seiten verwaltet werden. Dort können diverse Daten und Metadaten gepflegt werden sowie eine Liste von Content-Elementen. Diese werden dann auf der jeweiligen Seite in etwa wie grav Modulars nacheinander dargestellt. Auch Mehrsprachigkeit ist bei einem der Projekte von Relevanz.
+We use grav as the front end for a directus headless CMS in several projects. There is a collection in which the pages are managed. Various data and metadata can be maintained there, as well as a list of content elements. These are then displayed one after the other on the respective page in a similar way to grav Modulars. Multilingualism is also relevant for one of the projects.
 
-Für diese Seiten verwenden wir den Begriff „Kuratierte Seite”. Das rührt daher, dass wir bei unseren ersten Projekten die Erzeugung oder Darstellung von Seiten zu atomatisieren (z.B. durch Erkennung/Interpretation der bereitgestellten Inhalte). Allerdings wurde zu oft nach manuellen Eingriffen gefragt, weswegen wir dann auf diese Art der Seitenzusammenstellung umgeschwenkt sind.
+We use the term "curated page" for these pages. This stems from the fact that in our first projects we tried to automate the creation or presentation of pages (e.g. by recognising/interpreting the content provided). However, we were asked too often for manual intervention, which is why we then switched to this type of page composition.
 
-Zu jeder Seite muss in der Regel eine passende Seite im Seitenbaum (user/pages/) angelegt werden, da es am einfachsten ist über die slug der jeweiligen Seite den passenden Eintrag aus der Collection zu bekommen.
+As a rule, a matching page must be created in the page tree (user/pages/) for each page, as it is easiest to get the matching entry from the collection via the slug of the respective page.
 
-Warum soviel Aufwand? directus bietet für einige unserer Kunden viele Vorteile, die weit über die Speicherung von Daten für die Website hinaus gehen. Zusätzlich kann die Website davon profitieren Zugang zu weiter reichenden Informationen aus dem Backend zu erhalten.
+Why so much effort? directus offers many advantages for some of our customers that go far beyond the storage of data for a website. In addition, the website can benefit from gaining access to more extensive information from the backend.
 
 ### Suggested Content Structures
 
-Wir beschreiben hier nur die relevanten Felder und Eigenheiten der grundelgenden Collections.
+We only describe the relevant fields and characteristics of the basic collections here.
 
 #### Curated Pages
 
-Neben den Dingen die eine Seite gebrauchen kann (Hero image, Meta description, Headline, etc.) ist das wichtigste Feld für uns `slug`. Damit legen wir fest, für welche Seite die Inhalte bestimmt sind.
+In addition to the things that a page can use (hero image, meta description, headline, etc.), the most important field for us is 'slug'. We use it to specify which page the content is intended for.
 
-Genau so wichtig ist aber auch das Feld `content_elements`. Das ist ein *Many to Any* Feld, dass die eigentlichen Inhalte der Seite definiert. 
+Just as important is the `content_elements` field. This is a *Many to Any* field that defines the actual content of the page.
 
 #### Content Elements Collections
 
-Aktuell (2003/2024) [wird empfohlen](https://docs.directus.io/guides/headless-cms/reusable-components.html) für jeden Content Typ eine eigene Collection bereit zu stellen. Beispielsweise nutzen wir Elemente für Bild&Text, Aufzählungen mit Icons, Ansprechpartner, Akkordeons, Slider, Galerien, Downloads und mehr.
+Currently (2003/2024) [it is recommended](https://docs.directus.io/guides/headless-cms/reusable-components.html) to provide a separate collection for each content type. For example, we use elements for image & text, enumerations with icons, contact persons, accordions, sliders, galleries, downloads and more.
 
-Diese Struktur hat den Vorteil, dass man für jeden Typ nur die notwendigen Felder in der Collection vorhanden sind, anstatt eine Collection die unzählige Felder bereit stellt, weil sie jede erdenkliche Funktion abbilden muss.
+This structure has the advantage that only the necessary fields are available in the collection for each type, instead of a collection that provides countless fields because it has to map every conceivable function.
 
-Die Redaktreure können dann Elemente aus diesen Bereichen auswählen oder neu anlegen und die Reihenfolge festlegen.
+The editors can then select elements from these areas or create new ones and define the sequence.
 
 #### Specific Collections
 
-Für Inhalte wie News (Blog), können wir in den Einträgen auch auf die Content Elements Collections zurückgreifen. Um eine Übersicht der News anzuzeigen nutzen wir aber keine kuratierte Seite, sondern nutzen gravs Flex Object Funktionen.
+For content such as news (blog), we can also use the Content Elements Collections in the entries. However, we do not use a curated page to display an overview of the news, but use grav's Flex Object functions.
 
-Die lässt sich auch auf andere Datentypen wie Stellenangebote, Produkte Teammitglieder oder Ansprechpartner übertragen.
+This can also be transferred to other data types such as job vacancies, products, team members or contact persons.
 
-Dazu weiter unten mehr Details.
+More details below.
 
 ### Creating Blueprints for Collections
 
