@@ -117,11 +117,15 @@ class Utils
                     rename( $this->tempDir, $dir );
                     $this->log( 'revolveStorage: restored flex objects' );
                 }
+                else {
+                    $this->log( 'revolveStorage: no restorable content found' );
+                }
                 break;
             case 'delete':
                 if ( is_dir( $this->tempDir ) )
                 {
                     $this->delTree( $this->tempDir );
+                    rmdir( $this->tempDir );
                     $this->log( 'revolveStorage: removed keeped flex objects' );
                 }
                 break;
@@ -163,6 +167,37 @@ class Utils
         else
         {
             mkdir( $dir );
+        }
+    }
+
+    /*
+     * Handle content override manipulation
+     * We can setup enviroment based overrides for certain fields
+     */
+    public function handleOverrides( $payload )
+    {
+        if (
+            $this->config['env']
+            && array_key_exists( $this->config['env'], $this->config['envOverrides'] )
+        )
+        {
+            foreach ( $this->config['envOverrides'][ $this->config['env'] ] as $field => $override )
+            {
+                if ( $payload[ $field ] == $override[0] )
+                {
+                    $payload[ $field ] = $override[1];
+                }
+            }
+        }
+        return $payload;
+    }
+
+    public function clearAssets()
+    {
+        $contentFolder = $this->config['assets'];
+        if ( is_dir( $contentFolder ) )
+        {
+            $this->delTree( $contentFolder );
         }
     }
 

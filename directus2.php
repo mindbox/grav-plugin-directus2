@@ -45,7 +45,7 @@ class Directus2Plugin extends Plugin
             'onPluginsInitialized' => [
                 ['onPluginsInitialized', 0]
             ],
-            FlexRegisterEvent::class       => [['onRegisterFlex', 0]],
+            FlexRegisterEvent::class => [['onRegisterFlex', 0]],
         ];
     }
 
@@ -102,12 +102,8 @@ class Directus2Plugin extends Plugin
     {
         $grav = $this->grav;
         $this->directusUtil = new DirectusUtility(
-            $this->config()['directus']['directusAPIUrl'],
+            $this->config(),
             $grav,
-            '',
-            '',
-            $this->config()['directus']['token'],
-            $this->config()['disableCors']
         );
         $this->utils = new Utils( $grav, $this->config() );
 
@@ -119,16 +115,32 @@ class Directus2Plugin extends Plugin
 
     public function onTwigInitialized()
     {
-        /*
         $this->grav['twig']->twig()->addFunction(
             new \Twig_SimpleFunction('directusFile', [$this, 'returnDirectusFile'])
         );
-        /* */
-        /*
         $this->grav['twig']->twig()->addFunction(
-            new \Twig_SimpleFunction('localize', [$this, 'localizeObject'])
+            new \Twig_SimpleFunction('directusTranslate', [$this, 'localizeObject'])
         );
-        /* */
+    }
+
+    public function localizeObject( mixed $object, string $lang )
+    {
+        if ( is_array( $object ) )
+        {
+            return $this->directusUtil->translate( $object, $lang );
+        }
+        return $object;
+    }
+
+    public function returnDirectusFile( mixed $fileReference, ?array $options )
+    {
+        return $this->directusUtil->returnDirectusFile( $fileReference, $options );
+    }
+
+    private function requestItem( $collection, $id = 0, $depth = 2, $filters = [] )
+    {
+        $requestUrl = $this->directusUtil->generateRequestUrl( $collection, $id, $depth, $filters );
+        return $this->directusUtil->get( $requestUrl );
     }
 
     private function processWebHooks( string $route )
@@ -156,18 +168,14 @@ class Directus2Plugin extends Plugin
             case '/' . $endpoint . '/delete':
                 $this->processDelete();
                 break;
-            /*
 
-            case '/' . $endpoint . '/sync-flexobject':
-                $this->processFlexObject();
+            case '/' . $endpoint . '/restore':
+                $this->processRestore();
                 break;
-            case '/' . $endpoint . '/sync-flexobjects':
-                $this->processFlexObjects();
+
+            case '/' . $endpoint . '/assets-reset':
+                $this->processAssetReset();
                 break;
-            case '/' . $endpoint . '/sync-hook-flexobjects':
-                $this->processFlexHookObjects();
-                break;
-            */
         }
         return true;
     }
@@ -219,6 +227,9 @@ class Directus2Plugin extends Plugin
                         // special JMG langauge foo (to be undone )
                         // $item = $this->refactorItem( $item );
 
+                        // we might need to override some fields based on enviroment (see config)
+                        $item = $this->utils->handleOverrides( $item );
+
                         // in case it already/still exists
                         if ( $object )
                         {
@@ -237,7 +248,7 @@ class Directus2Plugin extends Plugin
                     }
                 }
             }
-            catch( Exception $e )
+            catch( \Exception $e )
             {
                 $this->utils->log( 'Exception. Trace: ' . $e->getMessage() );
                 $this->utils->respond( 500, 'syncing collections failed' );
@@ -245,6 +256,7 @@ class Directus2Plugin extends Plugin
                 // something bad happened… bring it back to last state
                 $this->utils->revolveStorage( $this->config()['storage'], 'restore' );
                 $this->utils->unLock();
+                exit();
             }
 
             // success
@@ -286,7 +298,8 @@ class Directus2Plugin extends Plugin
                 $collection = $directory->getCollection();
                 $id = $body['key'];
 
-                $objectInstance = new FlexObject( $body['payload'], $id, $directory ) ;
+                $payload = $this->utils->handleOverrides( $body['payload'] );
+                $objectInstance = new FlexObject( $payload, $id, $directory ) ;
                 $object = $objectInstance->create( $id );
                 $collection->add( $object );
                 $this->utils->log( 'created: ' . $id );
@@ -295,11 +308,12 @@ class Directus2Plugin extends Plugin
                 $this->utils->respond( 200, 'create successful' );
                 Cache::clearCache();
             }
-            catch( Exception $e )
+            catch( \Exception $e )
             {
                 $this->utils->log( 'Exception. Trace: ' . $e->getMessage() );
                 $this->utils->respond( 500, 'creating item failed' );
                 $this->utils->unLock();
+                exit();
             }
         }
         else
@@ -341,7 +355,8 @@ class Directus2Plugin extends Plugin
                     $object = $collection->get( $id );
                     if ( $object )
                     {
-                        $object->update( $body['payload'] );
+                        $payload = $this->utils->handleOverrides( $body['payload'] );
+                        $object->update( $payload );
                         $object->save();
                         $this->utils->Log( 'updated: ' . $id );
                     }
@@ -355,11 +370,12 @@ class Directus2Plugin extends Plugin
                 $this->utils->respond( 200, 'update successful' );
                 Cache::clearCache();
             }
-            catch( Exception $e )
+            catch( \Exception $e )
             {
                 $this->utils->log( 'Exception. Trace: ' . $e->getMessage() );
                 $this->utils->respond( 500, 'updating collection failed' );
                 $this->utils->unLock();
+                exit();
             }
         }
         else
@@ -433,10 +449,36 @@ class Directus2Plugin extends Plugin
         exit();
     }
 
-    private function requestItem( $collection, $id = 0, $depth = 2, $filters = [] )
+    private function processRestore()
     {
-        $requestUrl = $this->directusUtil->generateRequestUrl( $collection, $id, $depth, $filters );
-        return $this->directusUtil->get( $requestUrl );
+        $this->utils->log( 'processRestore: start' );
+        $this->utils->checkLock();
+        $this->utils->setLock();
+
+        // move current to temp, to restore in case of failure
+        $this->utils->revolveStorage( $this->config()['storage'], 'restore' );
+
+        $this->utils->respond( 200, 'restoring complete' );
+
+        $this->utils->unLock();
+        $this->utils->log( 'processDelete: end' );
+        exit();
+    }
+
+    private function processAssetReset()
+    {
+        $grav = $this->grav;
+        $this->utils->log( 'processAssetReset: start' );
+        $this->utils->checkLock();
+        $this->utils->setLock();
+
+        $this->utils->clearAssets();
+
+        $this->utils->respond( 200, 'assets cleared' );
+
+        $this->utils->unLock();
+        $this->utils->log( 'processAssetReset: end' );
+        exit();
     }
 
     // JMG Special translation awareness || TO BE REFACTORED /phades out

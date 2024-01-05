@@ -4,6 +4,7 @@ disableCors: true
 endpointName: your-prefix
 blueprints: user/blueprints/flex-objects/directus
 storage: user/data/directus
+assets: user/data/assets
 
 logging: false
 lockfileLifetime: 120
@@ -13,3 +14,10 @@ directus:
   email: your@email.com
   password: supersavepassword
   directusAPIUrl: http://your.api.com
+
+
+env: preview
+envOverrides:
+  preview:
+    status: ['preview', 'published']
+      # in env preview, rewrite status:'preview' to status:'published'

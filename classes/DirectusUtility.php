@@ -17,19 +17,14 @@ class DirectusUtility
     private $httpClient;
 
     /**
+     * @var array
+     */
+    private $config;
+
+    /**
      * @var string
      */
     private $apiServer;
-
-    /**
-     * @var string
-     */
-    private $email;
-
-    /**
-     * @var string
-     */
-    private $password;
 
     /**
      * @var string
@@ -44,30 +39,40 @@ class DirectusUtility
     /**
      * @var boolean
      */
-    private $noCors;
+    private $noCors = false;
 
     /**
      * DirectusUtility constructor.
-     * @param string $apiUrl
+     * @param array $config
      * @param Grav $grav
-     * @param string $email
-     * @param string $password
-     * @param string $token
-     * @param bool $noCors
      * @throws \Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface
      * @throws \Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface
      * @throws \Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function __construct(string $apiUrl, Grav $grav, string $email = '', string $password = '', string $token = '', bool $noCors = false)
+    public function __construct( array $config, Grav $grav )
     {
+        if ( $config )
+        {
+            $this->config = $config;
+        }
+
         $this->httpClient = new CurlHttpClient();
-        $this->apiServer = $apiUrl;
-        $this->email = $email;
-        $this->password = $password;
-        $this->token = $token ? $token : $this->requestToken();
         $this->grav = $grav;
-        $this->noCors = $noCors;
+        $this->apiServer = $config['directus']['directusAPIUrl'];
+
+        if ( isset( $this->config['directus']['token'] ) )
+        {
+            $this->token = $this->config['directus']['token'];
+        }
+        else {
+            $this->token = $this->requestToken( $config['directus']['email'], $config['directus']['password']);
+        }
+
+        if ( isset( $this->config['disableCors'] ) )
+        {
+            $this->noCors = $this->config['disableCors'];
+        }
     }
 
     /**
@@ -77,11 +82,11 @@ class DirectusUtility
      * @throws \Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    private function requestToken () {
+    private function requestToken ( string $email, string $password ) {
         $options = [
             'body' => [
-                'email' => $this->email,
-                'password' => $this->password
+                'email' => $email,
+                'password' => $password
             ],
         ];
 
@@ -98,14 +103,16 @@ class DirectusUtility
     /**
      * @param string $token
      */
-    public function setToken(string $token){
+    public function setToken(string $token)
+    {
         $this->token = $token;
     }
 
     /**
      * @return string[]
      */
-    private function getAuthorizationHeaders() {
+    private function getAuthorizationHeaders()
+    {
         return [
             'Authorization' => 'Bearer ' . $this->token
         ];
@@ -118,7 +125,6 @@ class DirectusUtility
      */
     public function get($path = '')
     {
-
         $options = $this->getOptions();
 
         return $this->httpClient->request(
@@ -128,7 +134,8 @@ class DirectusUtility
         );
     }
 
-    public function update(string $collection, int $id,  array $dataSet) {
+    public function update(string $collection, int $id,  array $dataSet)
+    {
         $options = $this->getOptions();
 
         $options['json'] = $dataSet;
@@ -139,7 +146,8 @@ class DirectusUtility
         );
     }
 
-    public function insert(string $collection,  array $dataSet) {
+    public function insert(string $collection,  array $dataSet)
+    {
         $options = $this->getOptions();
 
         $options['json'] = $dataSet;
@@ -186,15 +194,24 @@ class DirectusUtility
                 $i < $depth ? $url .= '.' : null;
             }
         }
-        if(isset($filters['status'])) {
-            if(isset($this->grav['config']['system']['env']['state']) && $this->grav['config']['system']['env']['state'] === 'preview') {
+        /*
+        if ( isset( $filters['status'] ) )
+        {
+            if (
+                isset( $this->grav['config']['system']['env']['state'] )
+                && $this->grav['config']['system']['env']['state'] === 'preview'
+            )
+            {
                 $filters['status']['operator'] = '_in';
                 $filters['status']['value'] = $this->grav['plugins']['Grav\Plugin\DirectusPlugin']->config()['env']['status']['preview'];
-            } else {
+            }
+            else
+            {
                 $filters['status']['operator'] = '_eq';
                 $filters['status']['value'] = $this->grav['plugins']['Grav\Plugin\DirectusPlugin']->config()['env']['status']['default'];
             }
         }
+        */
 
         foreach($filters as $fields => $filter) {
 
@@ -225,5 +242,106 @@ class DirectusUtility
         }
 
         return $filterString;
+    }
+
+
+    /**
+     * @param array $object
+     * @param string $lang
+     * @return array
+     */
+    public function translate( array $object, string $lang )
+    {
+        foreach ( $object['translations'] as $translation )
+        {
+            if (
+                is_array( $translation['languages_code'] )
+                && ( $lang === substr( $translation['languages_code']['code'], 0, 2 ) )
+            )
+            {
+                foreach ( $translation as $key => $value )
+                {
+                    if( $key !== 'id' && $value )
+                    {
+                        $object[$key] = $value;
+                    }
+                }
+            }
+            elseif (
+                is_string( $translation['languages_code'] )
+                && ( $lang === substr( $translation['languages_code'], 0, 2 ) )
+            )
+            {
+                foreach ( $translation as $key => $value )
+                {
+                    if( $key !== 'id' && $value )
+                    {
+                        $object[$key] = $value;
+                    }
+                }
+            }
+        }
+        return $object;
+    }
+
+    /**
+     * @param array|null $fileReference
+     * @param array|null $options
+     * @return string
+     * @throws \Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
+     */
+    public function returnDirectusFile ( ?array $fileReference, ?array $options = [] )
+    {
+        // if ref is string
+        // request file info first $url =  '/files/' . $fileReference['id'];
+        // but since there will always be a request to the server this is not desirable
+
+        if( is_array( $fileReference ) )
+        {
+            $contentFolder = $this->config['assets'];
+
+            if ( ! is_dir( $contentFolder ) )
+            {
+                mkdir ( $contentFolder );
+            }
+
+            $path_parts = pathinfo( $fileReference['filename_download'] );
+            if( ! isset( $path_parts['extension'] ) )
+            {
+                // panic!
+                dd( $fileReference );
+            }
+            $hash = md5( json_encode( $options ) );
+            $fileName = $path_parts['filename'] . '-' . $hash . '.' . $path_parts['extension'];
+
+            $fullPath = $contentFolder . '/' . $fileName;
+
+            $url =  '/assets/' . $fileReference['id'];
+            $query = http_build_query( $options );
+            $url = $query ? $url . '?' . $query : $url;
+
+            if ( ! file_exists( $fullPath ) )
+            {
+                try
+                {
+                    $imageData = $this->get( $url )->getContent();
+                    $fp = fopen( $fullPath,'x' );
+                    fwrite( $fp, $imageData );
+                    fclose( $fp );
+                }
+                catch ( \Exception $e )
+                {
+                    $this->grav['debugger']->addException($e);
+                }
+            }
+
+            return '/' . $fullPath;
+
+        } else {
+            return null;
+        }
     }
 }
