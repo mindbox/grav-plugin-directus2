@@ -265,21 +265,21 @@ To install the plugin automaticall with `bin/grav install`, add the following to
 
 ```
 git:
-    news:
-        url: https://github.com/zebra-group/grav-plugin-directus2
+    directus2:
+        url: https://github.com/mindbox/grav-plugin-directus2
         path: user/plugins/directus2
         branch: main
 ```
 
 ### Manual Installation
 
-To install the plugin manually, download the zip-version of this repository and unzip it under `/your/site/grav/user/plugins`. Then rename the folder to `directus2`. You can find these files on [GitHub](https://github.com/zebra-group/grav-plugin-directus2).
+To install the plugin manually, download the zip-version of this repository and unzip it under `/your/site/grav/user/plugins`. Then rename the folder to `directus2`. You can find these files on [GitHub](https://github.com/mindbox/grav-plugin-directus2).
 
 You should now have all the plugin files under
 
     /your/site/grav/user/plugins/directus2
 	
-> NOTE: This plugin is a modular component for Grav which may require other plugins to operate, please see its [blueprints.yaml-file on GitHub](https://github.com/zebra-group/grav-plugin-directus2/blob/main/blueprints.yaml).
+> NOTE: This plugin is a modular component for Grav which may require other plugins to operate, please see its [blueprints.yaml-file on GitHub](https://github.com/mindbox/grav-plugin-directus2/blob/main/blueprints.yaml).
 
 ## Credits
 
