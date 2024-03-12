@@ -9,7 +9,7 @@ author:
   email: sebastian.laube@mindbox.de
 homepage: https://github.com/mindbox/grav-plugin-directus2
 demo: http://demo.yoursite.com
-keywords: grav, plugin, etc
+keywords: grav, plugin, directus, flex-objects
 bugs: https://github.com/mindbox/grav-plugin-directus2/issues
 docs: https://github.com/mindbox/grav-plugin-directus2/blob/develop/README.md
 license: MIT

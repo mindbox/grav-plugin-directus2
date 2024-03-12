@@ -132,7 +132,7 @@ class Directus2Plugin extends Plugin
         return $object;
     }
 
-    public function returnDirectusFile( mixed $fileReference, ?array $options )
+    public function returnDirectusFile( mixed $fileReference, ?array $options = [] )
     {
         return $this->directusUtil->returnDirectusFile( $fileReference, $options );
     }
