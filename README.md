@@ -288,6 +288,5 @@ Big thanks to [Erik Konrad](https://github.com/erik-konrad), who created the ori
 ## To Do
 
 - [ ] CLI command for creating blueprints
-- [ ] Custom Flex Classes for Collection or Item
-- [ ] Future plans, if any
+- [x] Custom Flex Classes for Collection or Item
 
