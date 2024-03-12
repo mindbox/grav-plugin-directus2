@@ -1,0 +1,22 @@
+title: News
+description: News
+type: flex-objects
+config:
+  directus:
+    depth: 4
+    filter:
+      status:
+        value: 'draft, archived, deleted'
+        operator: _nin
+      sjm_group_members:
+        mm_field: sjm_group_members_id
+        value: 1
+        operator: _in
+  data:
+    object: 'Grav\Plugin\Directus2\Flex\Types\Directus2\Directus2Object'
+    collection: 'Grav\Plugin\Directus2\Flex\Types\Directus2\Directus2Collection'
+    index: 'Grav\Common\Flex\Types\Generic\GenericIndex'
+    storage:
+      class: 'Grav\Framework\Flex\Storage\FolderStorage'
+      options:
+        folder: user-data://directus/sjm_news

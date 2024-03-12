@@ -66,8 +66,8 @@ config:
         value: 1
         operator: _in
   data:
-    object: 'Grav\Common\Flex\Types\Generic\GenericObject'
-    collection: 'Grav\Common\Flex\Types\Generic\GenericCollection'
+    object: 'Grav\Plugin\Directus2\Flex\Types\Directus2\Directus2Object'
+    collection: 'Grav\Plugin\Directus2\Flex\Types\Directus2\Directus2Collection'
     index: 'Grav\Common\Flex\Types\Generic\GenericIndex'
     storage:
       class: 'Grav\Framework\Flex\Storage\FileStorage'
@@ -126,36 +126,78 @@ You can extend this to your preferences. For example you might need some layout 
 
 ### Displaying Content from Collections
 
-WIP explain like news plguin
+Since we store the data from directus just like normal Flex Objects, we can query them in Twig like any other collection.
+
+```twig
+{% set services = grav.get('flex').collection( 'services' ).filterBy( { 'status': 'published' } ) %}
+
+{% for service in services %}
+    {% set service = localize( service.jsonSerialize(), currentLang ) %}
+    {% set data = {
+        icon: service.icon,
+        title: service.name,
+        text: service.short_description.
+    } %}
+    {% include 'partials/service-overview.html.twig' with { item: data } %}
+{% endfor %}
+```
 
 ## Endpoints/Webhooks
 
-WIP 
+The Enpoints will be populated under the `endpointName` from the config. For example: example.com/your-prefix/sync.
 
-### Complete Sync
-
-`/your-prefix/sync`
-
-### Pushing Changes
-
-add
-update
-delete
-restore (if we encounter a server error, the revolved content might not be restored automatically, trigger it with this hook)
-assets-reset (remove all stored assets in case of name mismatch or other issues)
+|Endpoint|Function|
+|---|---|
+| add | Add a new item. Requires Payload, needs to be called via directus webhooks. |
+| update | Update one ore more items. Requires Payload, needs to be called via directus webhooks. |
+| delete | Delete one or more items. Requires Payload, needs to be called via directus webhooks. |
+| sync | Clear the current Flex Objects (managed by this plugin) and get all the content fresh from the directus server. |
+| restore | If we encounter a server error, the revolved content might not be restored automatically, trigger it with this enpoint. |
+| assets-reset | Remove all stored assets in case of name mismatch or other issues. |
 
 ### Creating Page Folders for specific Collections
-maybe todo? but flex objects are more elegeant.
-blueprints can contain information on folder creation (if needed, still todo)
+
+In the old directus plugin we used to have an action that created folders per entry of specific collections like blog entries (relict of pre Flex Objects times). This can be done with dynamic page creation now.
+
+TODO: Expample Code
 
 ### Accessing Media in Templates
 
-WIP 
-directus_file()…
+The Twig function `directus_file()` will download the requested file, saves the file in the accets folder (`assets` in plugin configuration) and outputs the URL to the file inside grav's file structure.
+
+In the following example we request the first image from the field sjm_images in an element. We provide the function with the whole image object (includes id, filename_disk, filename_download, etc.).
+
+```twig
+<img class="card__thumbnail"
+    src="{{ directusFile( post.sjm_images[0].directus_files_id, { width: '200', height: '300', quality: 70 } ) }}"
+    width="200"
+    height="300"
+    loading="lazy"
+    decoding="async"
+    alt="{{ post.sjm_images[0].directus_files_id.description }}" />
+```
+The file is going to be saved as `user/data/assets/imagefilename-592d40567ccab4aef750b7a1a3f555a8.png`. The second part of the filename is a hash of the options (like size and quality).
+
+For files like PDFs you just omit the options in the function call.
+
+```twig
+<a class="download__link" href="{{ directusFile( post.manual_file.directus_files_id ) }}">
+    Download Instructions
+</a>
+```
 
 ### Working with Translations
 
-WIP 
+To work with translations you set up your grav as usual. In directus, you setup translations for you collections, which will provide a `translations` object in every API response for these collections.
+
+The Twig function `directusTranslate` will provide you a copy of the original entry but overwrites all fields available in the translation.
+
+```twig
+{% set translated = directusTranslate( post.jsonSerialize(), 'en' ) %}
+{{ translated.sjm_description|markdown|raw }}
+```
+
+The language string `'en'` from the example should be replaced with a variable holding the current language. It depends on the way you handle this in your theme.
 
 ## Configuration
 
@@ -167,7 +209,7 @@ Here is the default configuration and an explanation of available options:
 enabled: true
 
 disableCors: true
-endpointName: your-prefix
+endpointName: d2action
 blueprints: user/blueprints/flex-objects/directus
 storage: user/data/directus
 assets: user/data/assets
@@ -177,14 +219,32 @@ lockfileLifetime: 120
 
 directus:
   token: 1234567
-  email: your@email.com
+  email: test@example.com
   password: supersavepassword
   directusAPIUrl: http://your.api.com
 ```
 
-WIP Describe
+| Configuration Key | Meaning/Notes |
+| --- | --- |
+| disableCors | CORS can be an issue of connection problems. For time your DevOps figure this out, you can disable it. |
+| endpointName | Defines the slug where your API endpoints are located. For example http://example.com/d2action/sync |
+| blueprints | Location where the Flex Object Blueprints related to directus are. |
+| storage | Location where the Flex Object data is stored. Needs to match the data.storage.options.folder setting in your blueprints and will be used to create new blueprints via CLI. Do not use the same folder as redular flex objects, since this folder will be emptied in the process of a complete sync. |
+| assets | Location where requested files are stored. |
+| logging | Creates extensive log files. You should only use this in development or for debugging. |
+| lockfileLifetime | Lifetime of the Lock File in seconds |
+| directus.token | API Access Token. If set email and passwort are unnecessary |
+| directus.email | Email (username) to access the API |
+| directus.password | password to access the API |
+| directus.directusAPIUrl | URL of your directus server. |
 
 ### Enviroments and overrides
+
+You might need to have some kind of preview system, where editors can see their changes before publishing. Depending on your infrastructure and workflows the enviromental overrides might be helpful.
+
+The example below can be added to your enviroment config like `user/env/preview.example.com/config/plugins/directus2.yaml`.
+
+It assumes that you have a custom status 'preview'. This is not displayed in the live system because it only looks for 'published'. The env configuration changes the status preview to published and displays it on the system as if it were live.
 
 ```yaml
 env: preview
@@ -193,9 +253,6 @@ envOverrides:
     status: ['preview', 'published']
       # in env preview, rewrite status:'preview' to status:'published'
 ```
-
-WIP
-config… preview server…
 
 
 ## Installation
@@ -226,8 +283,7 @@ You should now have all the plugin files under
 
 ## Credits
 
-**Did you incorporate third-party code? Want to thank somebody?**
-Eric…
+Big thanks to [Erik Konrad](https://github.com/erik-konrad), who created the original directus plugin which this on relies heavily on.
 
 ## To Do
 

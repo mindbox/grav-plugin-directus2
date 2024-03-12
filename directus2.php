@@ -250,12 +250,12 @@ class Directus2Plugin extends Plugin
             }
             catch( \Exception $e )
             {
-                $this->utils->log( 'Exception. Trace: ' . $e->getMessage() );
-                $this->utils->respond( 500, 'syncing collections failed' );
-
                 // something bad happened… bring it back to last state
                 $this->utils->revolveStorage( $this->config()['storage'], 'restore' );
                 $this->utils->unLock();
+
+                $this->utils->log( 'Exception. Trace: ' . $e->getMessage() );
+                $this->utils->respond( 500, 'syncing collections failed' );
                 exit();
             }
 
