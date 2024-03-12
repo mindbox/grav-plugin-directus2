@@ -255,6 +255,7 @@ class Directus2Plugin extends Plugin
                 $this->utils->unLock();
 
                 $this->utils->log( 'Exception. Trace: ' . $e->getMessage() );
+                $this->utils->log( 'Exception. File: ' . $e->getFile() . ', ' . $e->getLine() );
                 $this->utils->respond( 500, 'syncing collections failed' );
                 exit();
             }

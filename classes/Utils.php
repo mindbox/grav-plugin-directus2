@@ -113,7 +113,7 @@ class Utils
             case 'restore':
                 if ( is_dir( $this->tempDir ) )
                 {
-                    rmdir( $dir );
+                    $this->delTree( $dir );
                     rename( $this->tempDir, $dir );
                     $this->log( 'revolveStorage: restored flex objects' );
                 }
@@ -177,13 +177,13 @@ class Utils
     public function handleOverrides( $payload )
     {
         if (
-            $this->config['env']
+            array_key_exists( 'env', $this->config )
             && array_key_exists( $this->config['env'], $this->config['envOverrides'] )
         )
         {
             foreach ( $this->config['envOverrides'][ $this->config['env'] ] as $field => $override )
             {
-                if ( $payload[ $field ] == $override[0] )
+                if ( array_key_exists( $field, $payload ) && $payload[ $field ] == $override[0] )
                 {
                     $payload[ $field ] = $override[1];
                 }

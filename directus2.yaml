@@ -16,8 +16,8 @@ directus:
   directusAPIUrl: http://your.api.com
 
 
-env: preview
-envOverrides:
-  preview:
-    status: ['preview', 'published']
+# env: preview
+# envOverrides:
+#   preview:
+#     status: ['preview', 'published']
       # in env preview, rewrite status:'preview' to status:'published'
