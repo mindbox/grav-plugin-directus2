@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="{{ grav.language.getActive ?: grav.config.site.default_lang }}">
+<head>
+    <meta charset="utf-8" />
+    <title>{{ site.title }}</title>
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font: 1.2em/calc( 1em + .35rem ) Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro, sans-serif;
+        }
+        div {
+            max-width: 50ch;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>{{ 'PLUGIN_DIRECTUS2.MAINTENANCE'|t }}</h1>
+        <p>{{ 'PLUGIN_DIRECTUS2.BRB'|t }}</p>
+    </div>
+</body>
+</html>

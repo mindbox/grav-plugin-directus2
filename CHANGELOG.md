@@ -1,3 +1,12 @@
+# 2.0.2
+##  2024-04-09
+
+1. [](#improvement)
+    * Tested with real directus and enhanced create and update functionality
+
+1. [](#new)
+    * Maintenance template/output on locked
+
 # 2.0.1
 ##  2024-03-12
 

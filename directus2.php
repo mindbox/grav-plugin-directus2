@@ -46,6 +46,7 @@ class Directus2Plugin extends Plugin
                 ['onPluginsInitialized', 0]
             ],
             FlexRegisterEvent::class => [['onRegisterFlex', 0]],
+            'onTwigTemplatePaths'   => ['onTwigTemplatePaths', 1],
         ];
     }
 
@@ -98,6 +99,14 @@ class Directus2Plugin extends Plugin
         }
     }
 
+    /**
+     * Add current directory to twig lookup paths.
+     */
+    public function onTwigTemplatePaths() : void
+    {
+        $this->grav['twig']->twig_paths[] = __DIR__ . '/templates';
+    }
+
     public function onPageInitialized()
     {
         $grav = $this->grav;
@@ -106,6 +115,17 @@ class Directus2Plugin extends Plugin
             $grav,
         );
         $this->utils = new Utils( $grav, $this->config() );
+
+
+        // override the page with a maintenance tempalte while a process is running
+        if ( $this->utils->isLocked() )
+        {
+            $page = $this->grav['page'];
+
+            // $page->title( 'PLUGIN_DIRECTUS2.MAINTENANCE' );
+            $page->template( 'd2maintenance' );
+            $page->modifyHeader( 'http_response_code', 503 );
+        }
 
         if ( strstr( $grav['uri']->route(), $this->config()['endpointName'] ) )
         {
@@ -152,7 +172,6 @@ class Directus2Plugin extends Plugin
         // $grav['debugger']->addMessage( $grav['flex']->getDirectory('currency')->getConfig() );
 
         // dd( $this->grav['flex']->getCollection('currency')->getConfig() );
-
 
         switch ( $route )
         {
@@ -209,7 +228,6 @@ class Directus2Plugin extends Plugin
                 {
                     $this->utils->log( 'processing: ' . $collectionName );
                     $directory = $grav['flex']->getDirectory( $collectionName );
-                    $collection = $directory->getCollection();
                     $config = $directory->getConfig()['directus'];
 
                     // get the collection
@@ -223,28 +241,8 @@ class Directus2Plugin extends Plugin
                     // process the collection
                     foreach ( $response->toArray()['data'] as $item )
                     {
-                        $object = $collection->get( $item['id'] );
-                        // special JMG langauge foo (to be undone )
-                        // $item = $this->refactorItem( $item );
-
-                        // we might need to override some fields based on enviroment (see config)
-                        $item = $this->utils->handleOverrides( $item );
-
-                        // in case it already/still exists
-                        if ( $object )
-                        {
-                            $object->update( $item );
-                            $object->save();
-                            $this->utils->Log( 'updated: ' . $item['id'] );
-                        }
-                        // or create new
-                        else
-                        {
-                            $objectInstance = new FlexObject( $item, $item['id'], $directory ) ;
-                            $object = $objectInstance->create( $item['id'] );
-                            $collection->add( $object );
-                            $this->utils->log( 'created: ' . $item['id'] );
-                        }
+                        // updat eor create the entry
+                        $this->injectEntry( $item, $collectionName );
                     }
                 }
             }
@@ -281,7 +279,7 @@ class Directus2Plugin extends Plugin
         $grav = $this->grav;
 
         $this->utils->log( 'processCreate: start' );
-        $this->utils->checkLock();
+        // $this->utils->checkLock();
         $this->utils->setLock();
 
         $body = $grav['request']->getParsedBody();
@@ -296,14 +294,20 @@ class Directus2Plugin extends Plugin
             {
                 $this->utils->log( 'processing in: ' . $body['collection'] );
                 $directory = $grav['flex']->getDirectory( $body['collection'] );
-                $collection = $directory->getCollection();
-                $id = $body['key'];
 
-                $payload = $this->utils->handleOverrides( $body['payload'] );
-                $objectInstance = new FlexObject( $payload, $id, $directory ) ;
-                $object = $objectInstance->create( $id );
-                $collection->add( $object );
-                $this->utils->log( 'created: ' . $id );
+                // request the whole entry from source, because we might need more recursion
+                $config = $directory->getConfig()['directus'];
+
+                // get the entry
+                $response = $this->requestItem(
+                    $body['collection'],
+                    $body['key'],
+                    ( $config['depth'] ?? 2 ),
+                    ( $config['filter'] ?? [] )
+                );
+
+                // update or create it
+                $this->injectEntry( $response->toArray()['data'], $body['collection'] );
 
                 // success
                 $this->utils->respond( 200, 'create successful' );
@@ -334,7 +338,7 @@ class Directus2Plugin extends Plugin
         $grav = $this->grav;
 
         $this->utils->log( 'processUpdate: start' );
-        $this->utils->checkLock();
+        // $this->utils->checkLock();
         $this->utils->setLock();
 
         $body = $grav['request']->getParsedBody();
@@ -350,16 +354,23 @@ class Directus2Plugin extends Plugin
                 $this->utils->log( 'processing in: ' . $body['collection'] );
                 $directory = $grav['flex']->getDirectory( $body['collection'] );
                 $collection = $directory->getCollection();
+                $config = $directory->getConfig()['directus'];
 
                 foreach ( $body['keys'] as $id )
                 {
                     $object = $collection->get( $id );
                     if ( $object )
                     {
-                        $payload = $this->utils->handleOverrides( $body['payload'] );
-                        $object->update( $payload );
-                        $object->save();
-                        $this->utils->Log( 'updated: ' . $id );
+                        // request the whole entry from source, because we might need more recursion
+                        $response = $this->requestItem(
+                            $body['collection'],
+                            $id,
+                            ( $config['depth'] ?? 2 ),
+                            ( $config['filter'] ?? [] )
+                        );
+
+                        // update or create it
+                        $this->injectEntry( $response->toArray()['data'], $body['collection'] );
                     }
                     else
                     {
@@ -431,7 +442,7 @@ class Directus2Plugin extends Plugin
                 $this->utils->respond( 200, 'update successful' );
                 Cache::clearCache();
             }
-            catch( Exception $e )
+            catch( \Exception $e )
             {
                 $this->utils->log( 'Exception. Trace: ' . $e->getMessage() );
                 $this->utils->respond( 500, 'deleting entries failed' );
@@ -480,6 +491,36 @@ class Directus2Plugin extends Plugin
         $this->utils->unLock();
         $this->utils->log( 'processAssetReset: end' );
         exit();
+    }
+
+    private function injectEntry( $item, $collectionName )
+    {
+        $grav = $this->grav;
+
+        $directory = $grav['flex']->getDirectory( $collectionName );
+        $collection = $directory->getCollection();
+        $object = $collection->get( $item['id'] );
+        // special JMG langauge foo (to be undone )
+        // $item = $this->refactorItem( $item );
+
+        // we might need to override some fields based on enviroment (see config)
+        $item = $this->utils->handleOverrides( $item );
+
+        // in case it already/still exists
+        if ( $object )
+        {
+            $object->update( $item );
+            $object->save();
+            $this->utils->Log( 'updated: ' . $item['id'] );
+        }
+        // or create new
+        else
+        {
+            $objectInstance = new FlexObject( $item, $item['id'], $directory ) ;
+            $object = $objectInstance->create( $item['id'] );
+            $collection->add( $object );
+            $this->utils->log( 'created: ' . $item['id'] );
+        }
     }
 
     // JMG Special translation awareness || TO BE REFACTORED /phades out

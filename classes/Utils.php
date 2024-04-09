@@ -88,6 +88,28 @@ class Utils
     }
 
     /*
+     * somewhat redundant, but useful
+     */
+    public function isLocked(): bool
+    {
+        if ( file_exists( $this->lockfile ) )
+        {
+            if ( time() - filemtime( $this->lockfile ) > ( $this->config['lockfileLifetime'] ?? 120 ) )
+            {
+                unlink( $this->lockfile );
+                $this->log( 'unlocked (lockfile too old)' );
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /*
      * tell them what happened
      */
     public function respond( $code = 200, $message = '' )

@@ -1,7 +1,7 @@
 name: Directus2
 slug: directus2
 type: plugin
-version: 2.0.1
+version: 2.0.2
 description: Using grav as frontend for a directus headless CMS
 icon: plug
 author:
