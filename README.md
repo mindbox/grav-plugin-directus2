@@ -259,8 +259,6 @@ envOverrides:
 
 ## Installation
 
-Installing the Directus2 plugin can be done in one of three ways: The GPM (Grav Package Manager) installation method lets you quickly install the plugin with a simple terminal command, the manual method lets you do so via a zip file, and the admin method lets you do so via the Admin Plugin.
-
 ### Installation as dependency (skeleton)
 
 To install the plugin automaticall with `bin/grav install`, add the following to the git section of your `user/.dependecies` file:
