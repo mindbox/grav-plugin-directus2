@@ -1,5 +1,12 @@
+# 2.0.3
+##  2024-04-010
+
+1. [](#improvement)
+    * custom recursive move function because rename() is unreliable
+
 # 2.0.2
 ##  2024-04-09
+
 
 1. [](#improvement)
     * Tested with real directus and enhanced create and update functionality

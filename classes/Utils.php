@@ -136,7 +136,8 @@ class Utils
                 if ( is_dir( $this->tempDir ) )
                 {
                     $this->delTree( $dir );
-                    rename( $this->tempDir, $dir );
+                    $this->moveDirectory( $this->tempDir, $dir );
+                    rmdir( $this->tempDir );
                     $this->log( 'revolveStorage: restored flex objects' );
                 }
                 else {
@@ -158,8 +159,7 @@ class Utils
                     {
                         $this->delTree( $this->tempDir );
                     }
-                    rename( $dir, $this->tempDir );
-                    mkdir( $dir );
+                    $this->moveDirectory( $dir, $this->tempDir );
                     $this->log( 'revolveStorage: moving current flex objects to temp' );
                 }
                 else
@@ -190,6 +190,45 @@ class Utils
         {
             mkdir( $dir );
         }
+    }
+
+    /*
+     * helper for recurcsive folder movement (rename() sucks a bit)
+     */
+    public function moveDirectory( $from, $to )
+    {
+        if ( ! is_dir( $from ) )
+        {
+            $this->log( 'moveDirectory: source directory does not exist' );
+            return;
+        }
+
+        if ( ! is_dir( $to ) )
+        {
+            mkdir( $to, 0777, true );
+        }
+
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($from, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        foreach ( $files as $fileinfo )
+        {
+            $target = $to . DIRECTORY_SEPARATOR . $fileinfo->getBasename();
+
+            if ( $fileinfo->isDir() )
+            {
+                mkdir( $target );
+            }
+            else
+            {
+                copy( $fileinfo->getPathname(), $target) ;
+            }
+        }
+
+        $this->delTree( $from );
+        $this->log( 'moveDirectory: directory moved successfully' );
     }
 
     /*
