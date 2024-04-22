@@ -15,6 +15,15 @@ directus:
   password: supersavepassword
   directusAPIUrl: http://your.api.com
 
+# only sync items with this status in the flex storage
+# this is easier as settign it for every collection
+statusFilter:
+  '_in': [ 'published' ]
+
+# on a preview server, you might want to include a preview status
+# statusFilter:
+  # '_in': [ 'published', 'preview' ]
+
 
 # env: preview
 # envOverrides:

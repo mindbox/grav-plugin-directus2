@@ -58,8 +58,8 @@ config:
   directus:
     depth: 3
     filter:
-      status:
-        value: 'published'
+      location:
+        value: 'Dreseden'
         operator: _eq
       sjm_group_members:
         mm_field: sjm_group_members_id
@@ -78,7 +78,7 @@ config:
 
 `config.directus` is where we store the information about what we want to get from directus when we do a fetch (getting all content from directus). In the example we demand a `depth` of 3 levels so we might get a good amout of recursive data, which can be important for information about referenced files for example.
 
-In the `filter` we can setup conditions on which data to include. In teh example we only want published entries (`filter.status`). The operators can be found in the [directus docs](https://docs.directus.io/reference/filter-rules.html#filter-operators).
+In the `filter` we can setup conditions on which data to include. In the example we only want entries with a certain location (`filter.location`). The operators can be found in the [directus docs](https://docs.directus.io/reference/filter-rules.html#filter-operators).
 
 In the example you can see the filter for the content of the relational field `sjm_group_members`. This field is a *many to many* field, for which we have the `mm_field` option. You will need to note the field name from the contingency collection. If it's set up as a *n:1* connection, you can use an `_eq 1` comparsion without the `mm_field`.
 
@@ -224,6 +224,9 @@ directus:
   email: test@example.com
   password: supersavepassword
   directusAPIUrl: http://your.api.com
+
+statusFilter:
+  '_in': [ 'published' ]
 ```
 
 | Configuration Key | Meaning/Notes |
@@ -239,6 +242,7 @@ directus:
 | directus.email | Email (username) to access the API |
 | directus.password | password to access the API |
 | directus.directusAPIUrl | URL of your directus server. |
+| statusFilter | Define which status types need to be synced (see env based config) |
 
 ### Enviroments and overrides
 
@@ -256,6 +260,18 @@ envOverrides:
       # in env preview, rewrite status:'preview' to status:'published'
 ```
 
+> This is going to be depricated in favour of purely enviroment based querying.
+
+NEW: All your collections should have a `status` field. If it's not important for a collection hide it and set `published` as default.
+
+On a preview server, you might want to include a preview status for `statusFilter` setting:
+
+```yaml
+statusFilter:
+  '_in': [ 'published', 'preview' ]
+```
+
+Using this way, we don't clutter our templates with status checks.
 
 ## Installation
 

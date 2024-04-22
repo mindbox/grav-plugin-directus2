@@ -213,14 +213,30 @@ class DirectusUtility
         }
         */
 
-        foreach($filters as $fields => $filter) {
+        foreach($filters as $fields => $filter)
+        {
 
             $fields = $this->parseFilterString($fields);
 
             $url .= '&filter' . $fields . (isset($filter['mm_field']) ? '[' . $filter['mm_field'] . ']' : '') . ( isset($filter['operator']) ? '[' . $filter['operator'] . ']' : null ) . '=' . $filter['value'];
         }
+
+        // filter for env based status
+        if ( $this->config['statusFilter'] )
+        {
+            foreach ( $this->config['statusFilter'] as $operator => $filter )
+            {
+                foreach( $filter as $key => $value )
+                {
+                    $url .= '&filter[status][' . $operator . '][' . $key . ']=' . $value;
+                }
+            }
+        }
+
         $url .= '&limit=' . (string)$limit;
-        if($sort) {
+
+        if( $sort )
+        {
             $url .= '&sort=' . $sort;
         }
 

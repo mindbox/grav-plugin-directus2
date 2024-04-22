@@ -1,5 +1,14 @@
+# 2.0.4
+##  2024-04-22
+
+1. [](#improvement)
+    * querying fromt directus with default status conditions (configurable by env)
+
+1. [](#new)
+    * publicNews FlexCollection filter for news filtering
+
 # 2.0.3
-##  2024-04-010
+##  2024-04-10
 
 1. [](#improvement)
     * custom recursive move function because rename() is unreliable

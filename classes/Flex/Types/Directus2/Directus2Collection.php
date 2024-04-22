@@ -55,4 +55,32 @@ class Directus2Collection extends GenericCollection
 
         return $this->createFrom(array_values($array_with_elements_remove));
     }
+
+    // custom filter to get news intended to be public
+    public function publicNews( $dateField = null ): GenericCollection
+    {
+        $expr = Criteria::expr();
+        $criteria = Criteria::create();
+        // https://www.doctrine-project.org/projects/doctrine-collections/en/1.6/expressions.html
+        // https://www.doctrine-project.org/projects/doctrine-collections/en/stable/expression-builder.html
+
+        if ( $dateField )
+        {
+            $date = new \DateTime( 'now' );
+
+            $criteria
+                ->where( $expr->eq( 'status', 'published' ) )
+                // we really should not show posts with future date
+                ->andWhere( $expr->lte( $dateField, $date->format("Y-m-d G:i") ) )
+                ->orderBy( [ 'date' => Criteria::DESC ] );
+        }
+        else
+        {
+            $criteria
+                ->where( $expr->eq( 'status', 'published' ) )
+                ->orderBy( [ 'date' => Criteria::DESC ] );
+        }
+
+        return $this->matching( $criteria );
+    }
 }
