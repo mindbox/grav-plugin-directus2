@@ -503,9 +503,6 @@ class Directus2Plugin extends Plugin
         // special JMG langauge foo (to be undone )
         // $item = $this->refactorItem( $item );
 
-        // we might need to override some fields based on enviroment (see config)
-        $item = $this->utils->handleOverrides( $item );
-
         // in case it already/still exists
         if ( $object )
         {

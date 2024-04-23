@@ -246,25 +246,13 @@ statusFilter:
 
 ### Enviroments and overrides
 
-You might need to have some kind of preview system, where editors can see their changes before publishing. Depending on your infrastructure and workflows the enviromental overrides might be helpful.
+You might need to have some kind of preview system, where editors can see their changes before publishing. Depending on your infrastructure and workflows the following might be helpful.
 
 The example below can be added to your enviroment config like `user/env/preview.example.com/config/plugins/directus2.yaml`.
 
-It assumes that you have a custom status 'preview'. This is not displayed in the live system because it only looks for 'published'. The env configuration changes the status preview to published and displays it on the system as if it were live.
+It assumes that you have a custom status 'preview'. This is not displayed in the live system because our default configuration only filters for 'published'. The env configuration changes the spectrum of allowed values.
 
-```yaml
-env: preview
-envOverrides:
-  preview:
-    status: ['preview', 'published']
-      # in env preview, rewrite status:'preview' to status:'published'
-```
-
-> This is going to be depricated in favour of purely enviroment based querying.
-
-NEW: All your collections should have a `status` field. If it's not important for a collection hide it and set `published` as default.
-
-On a preview server, you might want to include a preview status for `statusFilter` setting:
+But make shure all your collections should have a `status` field. If it's not important for a collection hide it and set `published` as default.
 
 ```yaml
 statusFilter:

@@ -231,27 +231,6 @@ class Utils
         $this->log( 'moveDirectory: directory moved successfully' );
     }
 
-    /*
-     * Handle content override manipulation
-     * We can setup enviroment based overrides for certain fields
-     */
-    public function handleOverrides( $payload )
-    {
-        if (
-            array_key_exists( 'env', $this->config )
-            && array_key_exists( $this->config['env'], $this->config['envOverrides'] )
-        )
-        {
-            foreach ( $this->config['envOverrides'][ $this->config['env'] ] as $field => $override )
-            {
-                if ( array_key_exists( $field, $payload ) && $payload[ $field ] == $override[0] )
-                {
-                    $payload[ $field ] = $override[1];
-                }
-            }
-        }
-        return $payload;
-    }
 
     public function clearAssets()
     {

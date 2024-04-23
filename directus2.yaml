@@ -23,10 +23,3 @@ statusFilter:
 # on a preview server, you might want to include a preview status
 # statusFilter:
   # '_in': [ 'published', 'preview' ]
-
-
-# env: preview
-# envOverrides:
-#   preview:
-#     status: ['preview', 'published']
-      # in env preview, rewrite status:'preview' to status:'published'

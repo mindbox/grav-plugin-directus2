@@ -1,8 +1,8 @@
 # 2.0.4
-##  2024-04-22
+##  2024-04-23
 
 1. [](#improvement)
-    * querying fromt directus with default status conditions (configurable by env)
+    * querying from directus with default status conditions (configurable by env), replacing older override logic
 
 1. [](#new)
     * publicNews FlexCollection filter for news filtering
