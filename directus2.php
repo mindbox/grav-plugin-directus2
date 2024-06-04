@@ -213,9 +213,6 @@ class Directus2Plugin extends Plugin
             // let's go but nothing shall disturb us
             $this->utils->setLock();
 
-            // move current to temp, to restore in case of failure
-            $this->utils->revolveStorage( $this->config()['storage'] );
-
             // what directories do we have to take care of?
             $blueprints = array_map( function( $path )
             {
@@ -249,7 +246,7 @@ class Directus2Plugin extends Plugin
             catch( \Exception $e )
             {
                 // something bad happened… bring it back to last state
-                $this->utils->revolveStorage( $this->config()['storage'], 'restore' );
+                $this->utils->backupStorage( $this->config()['storage'], 'restore' );
                 $this->utils->unLock();
 
                 $this->utils->log( 'Exception. Trace: ' . $e->getMessage() );
@@ -258,9 +255,10 @@ class Directus2Plugin extends Plugin
                 exit();
             }
 
+            // backup to restore in case of failure later
+            $this->utils->backupStorage( $this->config()['storage'] );
             // success
             $this->utils->respond( 200, 'sync successful' );
-            $this->utils->revolveStorage( $this->config()['storage'], 'delete' );
             Cache::clearCache();
         }
         else
@@ -468,12 +466,12 @@ class Directus2Plugin extends Plugin
         $this->utils->setLock();
 
         // move current to temp, to restore in case of failure
-        $this->utils->revolveStorage( $this->config()['storage'], 'restore' );
+        $this->utils->backupStorage( $this->config()['storage'], 'restore' );
 
         $this->utils->respond( 200, 'restoring complete' );
 
         $this->utils->unLock();
-        $this->utils->log( 'processDelete: end' );
+        $this->utils->log( 'processRestore: end' );
         exit();
     }
 

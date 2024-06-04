@@ -151,8 +151,8 @@ The Enpoints will be populated under the `endpointName` from the config. For exa
 | create | Add a new item. Requires Payload, needs to be called via directus webhooks. |
 | update | Update one ore more items. Requires Payload, needs to be called via directus webhooks. |
 | delete | Delete one or more items. Requires Payload, needs to be called via directus webhooks. |
-| sync | Clear the current Flex Objects (managed by this plugin) and get all the content fresh from the directus server. |
-| restore | If we encounter a server error, the revolved content might not be restored automatically, trigger it with this enpoint. |
+| sync | Clear the current Flex Objects (managed by this plugin) and get all the content fresh from the directus server. Automatically creates a backup of the fresh data. |
+| restore | If we encounter a server error, the backuped content might not be restored automatically, trigger it with this enpoint. |
 | assets-reset | Remove all stored assets in case of name mismatch or other issues. |
 
 Take note: create and update will request the the respective entry in return. This is necassary since the payload can be elaborate to process.

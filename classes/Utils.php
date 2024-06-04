@@ -2,6 +2,7 @@
 namespace Grav\Plugin\Directus2;
 
 use Grav\Common\Grav;
+use Grav\Common\Cache;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
@@ -128,20 +129,23 @@ class Utils
     /*
      * move current data set around
      */
-    public function revolveStorage( $dir, $operation = null ): void
+    public function backupStorage( $dir, $operation = null, $delete = null ): void
     {
         switch ( $operation )
         {
             case 'restore':
                 if ( is_dir( $this->tempDir ) )
                 {
+                    if ( !file_exists( $dir ) && !is_dir( $dir ) ) {
+                        mkdir( $dir );
+                    }
                     $this->delTree( $dir );
-                    $this->moveDirectory( $this->tempDir, $dir );
-                    rmdir( $this->tempDir );
-                    $this->log( 'revolveStorage: restored flex objects' );
+                    $this->copyDirectory( $this->tempDir, $dir . '//' );
+                    Cache::clearCache();
+                    $this->log( 'backupStorage: restored flex objects' );
                 }
                 else {
-                    $this->log( 'revolveStorage: no restorable content found' );
+                    $this->log( 'backupStorage: no restorable content found' );
                 }
                 break;
             case 'delete':
@@ -149,7 +153,7 @@ class Utils
                 {
                     $this->delTree( $this->tempDir );
                     rmdir( $this->tempDir );
-                    $this->log( 'revolveStorage: removed keeped flex objects' );
+                    $this->log( 'backupStorage: removed flex objects backup' );
                 }
                 break;
             default:
@@ -159,14 +163,14 @@ class Utils
                     {
                         $this->delTree( $this->tempDir );
                     }
-                    $this->moveDirectory( $dir, $this->tempDir );
-                    $this->log( 'revolveStorage: moving current flex objects to temp' );
                 }
                 else
                 {
                     mkdir( $dir );
-                    $this->log( 'revolveStorage: created fresh flex objects folder' );
+                    $this->log( 'backupStorage: created fresh flex objects folder' );
                 }
+                $this->log( 'backupStorage: backing up current flex objects' );
+                $this->copyDirectory( $dir, $this->tempDir );
         }
     }
 
@@ -195,11 +199,11 @@ class Utils
     /*
      * helper for recurcsive folder movement (rename() sucks a bit)
      */
-    public function moveDirectory( $from, $to )
+    public function copyDirectory( $from, $to )
     {
         if ( ! is_dir( $from ) )
         {
-            $this->log( 'moveDirectory: source directory does not exist' );
+            $this->log( 'copyDirectory: source directory does not exist' );
             return;
         }
 
@@ -215,20 +219,23 @@ class Utils
 
         foreach ( $files as $fileinfo )
         {
-            $target = $to . DIRECTORY_SEPARATOR . $fileinfo->getBasename();
+            $targetFodler = $to . basename( dirname( $fileinfo ) ). DIRECTORY_SEPARATOR;
 
             if ( $fileinfo->isDir() )
             {
-                mkdir( $target );
+                // since the folders come after the files in the loop, we ignore them…
+                continue;
             }
-            else
-            {
-                copy( $fileinfo->getPathname(), $target) ;
+
+            // create taregt folder if not existing
+            if ( !file_exists( $targetFodler ) && !is_dir( $targetFodler ) ) {
+                mkdir( $targetFodler );
             }
+
+            copy( $fileinfo->getPathname(), $targetFodler . $fileinfo->getBasename() ) ;
         }
 
-        $this->delTree( $from );
-        $this->log( 'moveDirectory: directory moved successfully' );
+        $this->log( 'copyDirectory: directory copied successfully' );
     }
 
 
