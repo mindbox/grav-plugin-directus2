@@ -56,6 +56,23 @@ class Directus2Collection extends GenericCollection
         return $this->createFrom(array_values($array_with_elements_remove));
     }
 
+    // custom filter to get only entries that have content in a specified field
+    public function getByField( $key, string $value = null ): Directus2Collection
+    {
+        $expr = Criteria::expr();
+        $criteria = Criteria::create();
+        // https://www.doctrine-project.org/projects/doctrine-collections/en/1.6/expressions.html#orwhere
+
+        if ( $value ) {
+            $criteria->where( $expr->eq( $key, $value ) );
+        }
+        else {
+            $criteria->where( $expr->notIn( $key, [ null, '' ] ) );
+        }
+
+        return $this->matching( $criteria );
+    }
+
     // custom filter to get news intended to be public
     public function publicNews( $dateField = null ): GenericCollection
     {

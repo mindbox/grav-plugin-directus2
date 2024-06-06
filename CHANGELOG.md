@@ -1,3 +1,9 @@
+# 2.0.6
+##  2024-06-05
+
+1. [](#improvement)
+    * added Flex Collection function for getting entries by field&value or field that has values at all
+
 # 2.0.5
 ##  2024-06-04
 
