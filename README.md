@@ -201,6 +201,16 @@ The Twig function `directusTranslate` will provide you a copy of the original en
 
 The language string `'en'` from the example should be replaced with a variable holding the current language. It depends on the way you handle this in your theme.
 
+## Event Hooks
+
+The plugin fires events so other plugins can extend functionality depending on the need of the project. For example, we make use of this in order to create an index of multilangual post for cathing the necessary slugs.
+
+* onDirectusSyncSuccess
+* onDirectusCreateSuccess
+* onDirectusUpdateSuccess
+* onDirectusRestore (after restoring)
+* onDirectusAssetReset (after clearing)
+
 ## Configuration
 
 Before configuring this plugin, you should copy the `user/plugins/directus2/directus2.yaml` to `user/config/plugins/directus2.yaml` and only edit that copy.

@@ -266,7 +266,7 @@ class DirectusUtility
      * @param string $lang
      * @return array
      */
-    public function translate( array $object, string $lang )
+    static function translate( array $object, string $lang )
     {
         foreach ( $object['translations'] as $translation )
         {

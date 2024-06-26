@@ -1,3 +1,9 @@
+# 2.0.7
+##  2024-06-26
+
+1. [](#new)
+    * added events to hook into for extension plugins
+
 # 2.0.6
 ##  2024-06-05
 

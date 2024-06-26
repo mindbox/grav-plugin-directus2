@@ -9,6 +9,7 @@ use Grav\Framework\Flex\Flex;
 use Grav\Framework\Flex\FlexObject;
 use Grav\Plugin\Directus2\Utils;
 use Grav\Plugin\Directus2\DirectusUtility;
+use RocketTheme\Toolbox\Event\Event;
 
 /**
  * Class Directus2Plugin
@@ -257,6 +258,8 @@ class Directus2Plugin extends Plugin
 
             // backup to restore in case of failure later
             $this->utils->backupStorage( $this->config()['storage'] );
+            //fire event to apply optional signers
+            $this->grav->fireEvent('onDirectusSyncSuccess', new Event(['message' => 'sync successful']));
             // success
             $this->utils->respond( 200, 'sync successful' );
             Cache::clearCache();
@@ -327,6 +330,7 @@ class Directus2Plugin extends Plugin
         }
 
         $this->utils->unLock();
+        $this->grav->fireEvent('onDirectusCreateSuccess', new Event(['message' => 'create successful']));
         $this->utils->log( 'processCreate: end' );
         exit();
     }
@@ -396,6 +400,7 @@ class Directus2Plugin extends Plugin
         }
 
         $this->utils->unLock();
+        $this->grav->fireEvent('onDirectusUpdateSuccess', new Event(['message' => 'update successful']));
         $this->utils->log( 'processUpdate: end' );
         exit();
     }
@@ -468,6 +473,7 @@ class Directus2Plugin extends Plugin
         // move current to temp, to restore in case of failure
         $this->utils->backupStorage( $this->config()['storage'], 'restore' );
 
+        $this->grav->fireEvent('onDirectusRestore', new Event(['message' => 'restored']));
         $this->utils->respond( 200, 'restoring complete' );
 
         $this->utils->unLock();
@@ -484,6 +490,7 @@ class Directus2Plugin extends Plugin
 
         $this->utils->clearAssets();
 
+        $this->grav->fireEvent('onDirectusAssetReset', new Event(['message' => 'assets reset']));
         $this->utils->respond( 200, 'assets cleared' );
 
         $this->utils->unLock();
