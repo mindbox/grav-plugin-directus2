@@ -9,6 +9,8 @@ assets: user/data/assets
 logging: false
 lockfileLifetime: 120
 
+# probeUA: kube-probe
+
 directus:
   token: 1234567
   email: your@email.com

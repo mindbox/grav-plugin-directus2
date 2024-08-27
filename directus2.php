@@ -117,15 +117,24 @@ class Directus2Plugin extends Plugin
         );
         $this->utils = new Utils( $grav, $this->config() );
 
-
         // override the page with a maintenance tempalte while a process is running
         if ( $this->utils->isLocked() )
         {
             $page = $this->grav['page'];
 
+            // for reasons you might want to deliver a non disruptive http code for certain User Agents
+            $response_code = 503;
+            if ( key_exists( 'probeUA', $this->config() ) )
+            {
+                $useragent = $grav['request']->getHeaders()['User-Agent'][0];
+                if ( strpos( $useragent, $this->config()['probeUA'] ) !== false )
+                {
+                    $response_code = 202;
+                }
+            }
             // $page->title( 'PLUGIN_DIRECTUS2.MAINTENANCE' );
             $page->template( 'd2maintenance' );
-            $page->modifyHeader( 'http_response_code', 503 );
+            $page->modifyHeader( 'http_response_code', $response_code );
         }
 
         if ( strstr( $grav['uri']->route(), $this->config()['endpointName'] ) )

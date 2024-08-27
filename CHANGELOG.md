@@ -1,3 +1,9 @@
+# 2.0.8
+##  2024-08-27
+
+1. [](#new)
+    * added a config setting to deliver the maintenance page with a different http code for specific User Agents
+
 # 2.0.7
 ##  2024-06-26
 
