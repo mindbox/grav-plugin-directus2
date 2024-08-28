@@ -121,12 +121,11 @@ class Directus2Plugin extends Plugin
         if ( $this->utils->isLocked() )
         {
             $page = $this->grav['page'];
-
             // for reasons you might want to deliver a non disruptive http code for certain User Agents
             $response_code = 503;
-            if ( key_exists( 'probeUA', $this->config() ) )
+            if ( key_exists( 'probeUA', $this->config() ) && key_exists( 'HTTP_USER_AGENT', $_SERVER ) )
             {
-                $useragent = $grav['request']->getHeaders()['User-Agent'][0];
+                $useragent = $_SERVER['HTTP_USER_AGENT'];
                 if ( strpos( $useragent, $this->config()['probeUA'] ) !== false )
                 {
                     $response_code = 202;

@@ -1,4 +1,10 @@
 # 2.0.8
+##  2024-08-28
+
+1. [](#bugfix)
+    * bugfix for new User Agent check
+
+# 2.0.8
 ##  2024-08-27
 
 1. [](#new)
