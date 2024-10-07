@@ -300,8 +300,29 @@ class DirectusUtility
         return $object;
     }
 
+    public function returnDirectusFileInfo ( ?string $id )
+    {
+        $contentFolder = $this->config['assets'];
+        $cahceFile = $contentFolder .'/'. $id . '.json';
+
+        if ( file_exists( $cahceFile ) )
+        {
+            $jsonContent = file_get_contents( $cahceFile );
+            $fileReference = json_decode( $jsonContent, true );
+        }
+        else
+        {
+            $response = $this->get( '/files/' . $id  );
+            $fileReference = $response->toArray()['data'];
+            $jsonData = json_encode( $fileReference, JSON_PRETTY_PRINT );
+            file_put_contents( $cahceFile, $jsonData );
+        }
+
+        return $fileReference;
+    }
+
     /**
-     * @param array|null $fileReference
+     * @param mixed|null $fileReference
      * @param array|null $options
      * @return string
      * @throws \Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface
@@ -309,16 +330,24 @@ class DirectusUtility
      * @throws \Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function returnDirectusFile ( ?array $fileReference, ?array $options = [] )
+    public function returnDirectusFile ( mixed $fileReference, ?array $options = [] )
     {
         // if ref is string
         // request file info first $url =  '/files/' . $fileReference['id'];
         // but since there will always be a request to the server this is not desirable
 
+        $contentFolder = $this->config['assets'];
+
+        // it's not desirable to request the directus server every time we only get the id provided
+        // so we cache the resonse with the assets. Downsite: In case of changes (e. g.
+        // description) we need to resett all assets and warm our cache again
+        if( is_string( $fileReference ) )
+        {
+            $fileReference = $this->returnDirectusFileInfo( $fileReference );
+        }
+
         if( is_array( $fileReference ) )
         {
-            $contentFolder = $this->config['assets'];
-
             if ( ! is_dir( $contentFolder ) )
             {
                 mkdir ( $contentFolder );
@@ -360,4 +389,28 @@ class DirectusUtility
             return null;
         }
     }
+
+    public function removeAsset ( ?string $id )
+    {
+        $contentFolder = $this->config['assets'];
+        $cahceFile = $contentFolder .'/'. $id . '.json';
+
+        $fileReference = $this->returnDirectusFileInfo( $id );
+
+        $path_parts = pathinfo( $fileReference['filename_download'] );
+        $prefix = $path_parts['filename'];
+
+        $files = glob( $contentFolder .'/'. $prefix . '*') ;
+
+        foreach ( $files as $file )
+        {
+            if ( is_file( $file ) )
+            {
+                unlink( $file );
+            }
+        }
+        unlink( $cahceFile );
+
+    }
+
 }

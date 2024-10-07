@@ -22,6 +22,9 @@ Why so much effort? directus offers many advantages for some of our customers th
 
 We only describe the relevant fields and characteristics of the basic collections here.
 
+> [!NOTE]
+> To reduce the PHP memory usage make sure to have a `date_updated` field in every collection. This way the sync will run also quicker.
+
 #### Curated Pages
 
 In addition to the things that a page can use (hero image, meta description, headline, etc.), the most important field for us is 'slug'. We use it to specify which page the content is intended for.
@@ -77,6 +80,9 @@ config:
 ```
 
 `config.directus` is where we store the information about what we want to get from directus when we do a fetch (getting all content from directus). In the example we demand a `depth` of 3 levels so we might get a good amout of recursive data, which can be important for information about referenced files for example.
+
+> [!WARNING]
+> Keep the depth as low as possible because with all the recursive data the directus API provides, it will sadly fill up your PHP memory while syncing.
 
 In the `filter` we can setup conditions on which data to include. In the example we only want entries with a certain location (`filter.location`). The operators can be found in the [directus docs](https://docs.directus.io/reference/filter-rules.html#filter-operators).
 
@@ -154,6 +160,7 @@ The Enpoints will be populated under the `endpointName` from the config. For exa
 | sync | Clear the current Flex Objects (managed by this plugin) and get all the content fresh from the directus server. Automatically creates a backup of the fresh data. |
 | restore | If we encounter a server error, the backuped content might not be restored automatically, trigger it with this enpoint. |
 | assets-reset | Remove all stored assets in case of name mismatch or other issues. |
+| assets-remove?id=uuid | Remove a specific stored asset by id. |
 
 Take note: create and update will request the the respective entry in return. This is necassary since the payload can be elaborate to process.
 
@@ -167,11 +174,14 @@ TODO: Expample Code
 
 The Twig function `directus_file()` will download the requested file, saves the file in the accets folder (`assets` in plugin configuration) and outputs the URL to the file inside grav's file structure.
 
+Make sure to use `directusFileInfo()` to get the array with file information for `directus_file()` to work with. Background; If your deph is too low (may also happen when using translations), only the file's UUID is provided. If the input is already an array `directusFileInfo()` returns it right away.
+
 In the following example we request the first image from the field sjm_images in an element. We provide the function with the whole image object (includes id, filename_disk, filename_download, etc.).
 
 ```twig
+{% set mediaObj = directusFileInfo( post.sjm_images[0].directus_files_id ) %}
 <img class="card__thumbnail"
-    src="{{ directusFile( post.sjm_images[0].directus_files_id, { width: '200', height: '300', quality: 70 } ) }}"
+    src="{{ directusFile( mediaObj, { width: '200', height: '300', quality: 70 } ) }}"
     width="200"
     height="300"
     loading="lazy"

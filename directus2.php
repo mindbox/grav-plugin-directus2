@@ -148,6 +148,9 @@ class Directus2Plugin extends Plugin
             new \Twig_SimpleFunction('directusFile', [$this, 'returnDirectusFile'])
         );
         $this->grav['twig']->twig()->addFunction(
+            new \Twig_SimpleFunction('directusFileInfo', [$this, 'returnDirectusFileInfo'])
+        );
+        $this->grav['twig']->twig()->addFunction(
             new \Twig_SimpleFunction('directusTranslate', [$this, 'localizeObject'])
         );
     }
@@ -164,6 +167,20 @@ class Directus2Plugin extends Plugin
     public function returnDirectusFile( mixed $fileReference, ?array $options = [] )
     {
         return $this->directusUtil->returnDirectusFile( $fileReference, $options );
+    }
+
+    public function returnDirectusFileInfo( mixed $file )
+    {
+        if ( is_array( $file ) and array_key_exists( 'id', $file ) )
+        {
+            return $file;
+        }
+        elseif ( is_string( $file ) )
+        {
+            return $this->directusUtil->returnDirectusFileInfo( $file );
+        }
+
+        return null;
     }
 
     private function requestItem( $collection, $id = 0, $depth = 2, $filters = [] )
@@ -204,6 +221,9 @@ class Directus2Plugin extends Plugin
             case '/' . $endpoint . '/assets-reset':
                 $this->processAssetReset();
                 break;
+            case '/' . $endpoint . '/asset-remove':
+                $this->processAssetRemove();
+                break;
         }
         return true;
     }
@@ -233,23 +253,10 @@ class Directus2Plugin extends Plugin
                 foreach ( $blueprints as $collectionName )
                 {
                     $this->utils->log( 'processing: ' . $collectionName );
-                    $directory = $grav['flex']->getDirectory( $collectionName );
-                    $config = $directory->getConfig()['directus'];
+                    $sync = $this->syncCollection( $collectionName );
+                    unset( $sync );
 
-                    // get the collection
-                    $response = $this->requestItem(
-                        $collectionName,
-                        0,
-                        ( $config['depth'] ?? 2 ),
-                        ( $config['filter'] ?? [] )
-                    );
-
-                    // process the collection
-                    foreach ( $response->toArray()['data'] as $item )
-                    {
-                        // updat eor create the entry
-                        $this->injectEntry( $item, $collectionName );
-                    }
+                    $this->utils->log( "Memory usage: " . $this->human_filesize(  memory_get_usage() ). " bytes" );
                 }
             }
             catch( \Exception $e )
@@ -491,7 +498,6 @@ class Directus2Plugin extends Plugin
 
     private function processAssetReset()
     {
-        $grav = $this->grav;
         $this->utils->log( 'processAssetReset: start' );
         $this->utils->checkLock();
         $this->utils->setLock();
@@ -506,34 +512,115 @@ class Directus2Plugin extends Plugin
         exit();
     }
 
-    private function injectEntry( $item, $collectionName )
+    private function processAssetRemove()
+    {
+        $id = htmlentities( $_GET['id'] );
+
+        $this->utils->log( 'processAssetRemove: start' );
+        $this->utils->checkLock();
+        $this->utils->setLock();
+
+        $this->directusUtil->removeAsset( $id );
+
+        $this->grav->fireEvent('onDirectusAssetRemove', new Event(['message' => 'asset removed: ' . $id ]));
+        $this->utils->respond( 200, 'asset removed' );
+
+        $this->utils->unLock();
+        $this->utils->log( 'processAssetRemove: end' );
+        exit();
+    }
+
+    private function syncCollection( $collectionName )
     {
         $grav = $this->grav;
-
         $directory = $grav['flex']->getDirectory( $collectionName );
         $collection = $directory->getCollection();
+        $config = $directory->getConfig()['directus'];
+
+        // get the collection
+        $response = $this->requestItem(
+            $collectionName,
+            0,
+            ( $config['depth'] ?? 2 ),
+            ( $config['filter'] ?? [] )
+        );
+        $response = $response->toArray()['data'];
+
+        // process the collection
+        foreach ( $response as $item )
+        {
+            // update or create the entry
+            $this->injectEntry( $item, $collection );
+            unset( $item );
+            gc_collect_cycles();
+        }
+
+        // clean up memory
+        $collection = null;
+        unset( $response );
+        unset( $collection );
+        unset( $directory );
+        gc_collect_cycles();
+
+        return true;
+    }
+
+    private function injectEntry( $item, $collection )
+    {
+        $grav = $this->grav;
         $object = $collection->get( $item['id'] );
-        // special JMG langauge foo (to be undone )
-        // $item = $this->refactorItem( $item );
 
         // in case it already/still exists
         if ( $object )
         {
-            $object->update( $item );
-            $object->save();
-            $this->utils->Log( 'updated: ' . $item['id'] );
+            if ( key_exists( 'date_updated', $item )
+                && (
+                    $item['date_updated'] == null
+                    || $item['date_updated'] == $object->getProperty( 'date_updated' )
+                )
+            )
+            {
+                $this->utils->Log( 'skipping: ' . $item['id'] );
+            }
+            else
+            {
+                $object->update( $item );
+                $object->save();
+                $this->utils->Log( 'updated: ' . $item['id'] );
+            }
         }
         // or create new
         else
         {
-            $objectInstance = new FlexObject( $item, $item['id'], $directory ) ;
+            $objectInstance = new FlexObject( $item, $item['id'], $collection->getFlexDirectory() ) ;
             $object = $objectInstance->create( $item['id'] );
             $collection->add( $object );
             $this->utils->log( 'created: ' . $item['id'] );
+
+            unset( $objectInstance);
         }
+
+        $grav = null;
+        $collection = null;
+        $directory = null;
+        $object = null;
+        unset( $grav );
+        unset( $collection );
+        unset( $directory );
+        unset( $object );
+
+        return true;
     }
 
-    // JMG Special translation awareness || TO BE REFACTORED /phades out
+    function human_filesize( $bytes, $decimals = 2 )
+    {
+        $factor = floor( ( strlen( $bytes ) - 1 ) / 3) ;
+        if ( $factor > 0 ) $sz = 'KMGT';
+        return sprintf( "%.{$decimals}f", $bytes / pow( 1024, $factor ) ) . @$sz[ $factor - 1 ] . 'B';
+    }
+
+
+    // JMG Special translation awareness || TO BE REFACTORED /phased out
     private function refactorItem(array $item) {
         if(key_exists('translations', $item)) {
 

@@ -89,7 +89,7 @@ class Directus2Collection extends GenericCollection
                 // we might want to exclude other statuses, but we assume we have only the contents, we want to show (see statusFilter in config)
                 // ->where( $expr->eq( 'status', 'published' ) )
                 // we really should not show posts with future date
-                ->andWhere( $expr->lte( $dateField, $date->format("Y-m-d G:i") ) )
+                ->andWhere( $expr->lte( $dateField, $date->format("Y-m-d\\TH:i:s") ) )
                 ->orderBy( [ 'date' => Criteria::DESC ] );
         }
         else

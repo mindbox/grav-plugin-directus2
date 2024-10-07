@@ -1,4 +1,18 @@
-# 2.0.8
+# 2.1.0
+##  2024-10-01
+
+1. [](#new)
+    * endpoint to remove chached assets by file ID
+    * `directusFileInfo()` for receiving file infos by file UUID
+
+1. [](#improvement)
+    * Reducing memory usage
+    * `directusFile()` now also accepts the file ID (queries and caches file info)
+
+1. [](#bugfix)
+    * Date comparison for news used the wrong format
+
+# 2.0.9
 ##  2024-08-28
 
 1. [](#bugfix)
