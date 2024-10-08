@@ -101,4 +101,10 @@ class Directus2Collection extends GenericCollection
 
         return $this->matching( $criteria );
     }
+
+    public function getConfig()
+    {
+        return $this->getFlexDirectory()->getConfig();
+    }
+
 }

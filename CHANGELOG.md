@@ -1,3 +1,9 @@
+# 2.1.1
+##  2024-10-08
+
+1. [](#new)
+    * extended flex collection to get directory config information
+
 # 2.1.0
 ##  2024-10-01
 
