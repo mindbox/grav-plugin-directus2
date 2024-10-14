@@ -1,3 +1,9 @@
+# 2.1.2
+##  2024-10-14
+
+1. [](#improvement)
+    * removed client specific dead code
+
 # 2.1.1
 ##  2024-10-08
 
