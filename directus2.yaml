@@ -8,6 +8,7 @@ assets: user/data/assets
 
 logging: false
 lockfileLifetime: 120
+modDateField: 'date_updated'
 
 # probeUA: kube-probe
 

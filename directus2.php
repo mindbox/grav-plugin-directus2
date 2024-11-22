@@ -546,15 +546,20 @@ class Directus2Plugin extends Plugin
         );
         $response = $response->toArray()['data'];
 
+        $validIDs = [];
+
         // process the collection
         foreach ( $response as $item )
         {
             // update or create the entry
             $this->injectEntry( $item, $collection );
+            array_push( $validIDs, $item['id'] );
             unset( $item );
             gc_collect_cycles();
         }
 
+        // remove all entries, that have not been in the response
+        $this->cleanupCollection( $collection, $validIDs );
         // clean up memory
         $collection = null;
         unset( $response );
@@ -569,14 +574,15 @@ class Directus2Plugin extends Plugin
     {
         $grav = $this->grav;
         $object = $collection->get( $item['id'] );
+        $modDateField = $this->config()['modDateField'];
 
         // in case it already/still exists
         if ( $object )
         {
-            if ( key_exists( 'date_updated', $item )
+            if ( key_exists( $modDateField , $item )
                 && (
-                    $item['date_updated'] == null
-                    || $item['date_updated'] == $object->getProperty( 'date_updated' )
+                    $item[ $modDateField ] == null
+                    || $item[ $modDateField ] == $object->getProperty( $modDateField )
                 )
             )
             {
@@ -610,6 +616,19 @@ class Directus2Plugin extends Plugin
         unset( $object );
 
         return true;
+    }
+
+    function cleanupCollection ( $collection, $validIDs )
+    {
+        $toRemove = $collection->unselect( $validIDs );
+        if ( $toRemove )
+        {
+            foreach ( $toRemove as $object )
+            {
+                $this->utils->Log( 'removed: ' . $object['id'] );
+                $object->delete();
+            }
+        }
     }
 
     function human_filesize( $bytes, $decimals = 2 )

@@ -1,3 +1,11 @@
+# 2.1.3
+##  2024-11-22
+
+1. [](#improvement)
+    * removing all objects that were not part of the directus response while syncing
+    * the name of filed that holds information of last modification date is now configurable
+
+
 # 2.1.2
 ##  2024-10-14
 

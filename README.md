@@ -238,6 +238,7 @@ assets: user/data/assets
 
 logging: false
 lockfileLifetime: 120
+modDateField: 'date_updated'
 
 directus:
   token: 1234567
@@ -258,6 +259,7 @@ statusFilter:
 | assets | Location where requested files are stored. |
 | logging | Creates extensive log files. You should only use this in development or for debugging. |
 | lockfileLifetime | Lifetime of the Lock File in seconds |
+| modDateField | Name of the field with the date of last modification in your collections (mandatory to have to work with this plugin) |
 | directus.token | API Access Token. If set email and passwort are unnecessary |
 | directus.email | Email (username) to access the API |
 | directus.password | password to access the API |
