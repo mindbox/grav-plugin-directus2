@@ -310,6 +310,7 @@ class Directus2Plugin extends Plugin
             {
                 $this->utils->log( 'processing in: ' . $body['collection'] );
                 $directory = $grav['flex']->getDirectory( $body['collection'] );
+                $collection = $directory->getCollection();
 
                 // request the whole entry from source, because we might need more recursion
                 $config = $directory->getConfig()['directus'];
@@ -323,7 +324,7 @@ class Directus2Plugin extends Plugin
                 );
 
                 // update or create it
-                $this->injectEntry( $response->toArray()['data'], $body['collection'] );
+                $this->injectEntry( $response->toArray()['data'], $collection );
 
                 // success
                 $this->utils->respond( 200, 'create successful' );
@@ -387,7 +388,7 @@ class Directus2Plugin extends Plugin
                         );
 
                         // update or create it
-                        $this->injectEntry( $response->toArray()['data'], $body['collection'] );
+                        $this->injectEntry( $response->toArray()['data'], $collection );
                     }
                     else
                     {

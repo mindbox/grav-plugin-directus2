@@ -1,3 +1,9 @@
+# 2.1.4
+##  2025-03-10
+
+1. [](#bugfix)
+    * correcting calls of `injectEntry` where a string instead of a collection object was provided
+
 # 2.1.3
 ##  2024-11-22
 
