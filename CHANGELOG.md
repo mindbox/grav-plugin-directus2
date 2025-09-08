@@ -1,3 +1,10 @@
+# 2.1.5
+##  2025-09-08
+
+1. [](#bugfix)
+    * returning null when a file has no extension instead of panicing (dum and die)
+
+
 # 2.1.4
 ##  2025-03-10
 

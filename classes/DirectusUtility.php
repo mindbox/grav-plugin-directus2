@@ -356,8 +356,9 @@ class DirectusUtility
             $path_parts = pathinfo( $fileReference['filename_download'] );
             if( ! isset( $path_parts['extension'] ) )
             {
-                // panic!
-                dd( $fileReference );
+                // panic! y u no extension?
+                // dd( $fileReference );
+                return null;
             }
             $hash = md5( json_encode( $options ) );
             $fileName = $path_parts['filename'] . '-' . $hash . '.' . $path_parts['extension'];
