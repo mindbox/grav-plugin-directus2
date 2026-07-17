@@ -1,3 +1,9 @@
+# 2.1.6
+##  2026-07-17
+
+1. [](#improvement)
+    * checking for grav 2.0 compatibility and minor fixes to accomodate PHP 8.4
+  
 # 2.1.5
 ##  2025-09-08
 

@@ -57,7 +57,7 @@ class Directus2Collection extends GenericCollection
     }
 
     // custom filter to get only entries that have content in a specified field
-    public function getByField( $key, string $value = null ): Directus2Collection
+    public function getByField( $key, ?string $value = null ): Directus2Collection
     {
         $expr = Criteria::expr();
         $criteria = Criteria::create();

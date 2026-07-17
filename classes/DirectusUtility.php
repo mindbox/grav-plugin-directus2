@@ -366,7 +366,7 @@ class DirectusUtility
             $fullPath = $contentFolder . '/' . $fileName;
 
             $url =  '/assets/' . $fileReference['id'];
-            $query = http_build_query( $options );
+            $query = http_build_query( $options ?? [] );
             $url = $query ? $url . '?' . $query : $url;
 
             if ( ! file_exists( $fullPath ) )
